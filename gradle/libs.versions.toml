@@ -1,0 +1,39 @@
+[versions]
+mockk = "1.13.3"
+kotest = "5.7.2"
+kotlin = "1.9.10"
+gradle = "8.1.1"
+kotlinxCoroutines = "1.7.3"
+gitSemVer = "1.1.10"
+kotestTestcontainers = "1.19.0"
+
+[libraries]
+kotest-junit5-jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotest" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-assertions-core-jvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-jvm = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotest-container = { module = "io.kotest.extensions:kotest-extensions-testcontainers", version.ref = "kotestTestcontainers"}
+
+[bundles]
+kotlin-testing = [
+    "kotest-junit5-jvm",
+    "kotest-assertions-core",
+    "kotest-assertions-core-jvm",
+    "mockk",
+    "mockk-jvm",
+]
+
+coroutines = [
+    "kotlinx-coroutines-core"
+]
+
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+dokka = "org.jetbrains.dokka:1.9.0"
+kotlin-qa = { id = "org.danilopianini.gradle-kotlin-qa", version = "0.49.1" }
+taskTree = { id = "com.dorongold.task-tree", version = "2.1.1" }
+gitSemVer = { id = "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin", version.ref = "gitSemVer" }
+multiJvmTesting = { id = "org.danilopianini.multi-jvm-test-plugin", version = "0.5.5" }
