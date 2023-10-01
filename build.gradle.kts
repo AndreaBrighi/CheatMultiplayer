@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.qa)
     alias(libs.plugins.taskTree)
     alias(libs.plugins.dokka)
+    jacoco
     alias(libs.plugins.multiJvmTesting)
 }
 
@@ -15,6 +16,7 @@ subprojects {
     apply(plugin = "kotlin")
     apply(plugin = "java")
     apply(plugin = "org.danilopianini.multi-jvm-test-plugin")
+    apply(plugin = "jacoco")
 
     tasks.test {
         useJUnitPlatform()
