@@ -7,9 +7,9 @@ import it.unibo.ds.model.cards.Card
  *
  * @param cards the played cards not in hands
  *
- * @property notPresentCards the cards that aren't in hos hand
+ * @property notPresentCards the cards that aren't in his hand
  */
-class CardsNotInHandException(cards: List<Card>) : Exception() {
+class CardsNotInHandException(cards: Set<Card>) : Exception() {
 
-    val notPresentCards = cards.toList()
+    val notPresentCards = cards.toSet()
 }
