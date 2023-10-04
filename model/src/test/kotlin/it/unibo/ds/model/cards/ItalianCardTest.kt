@@ -39,6 +39,7 @@ class ItalianCardTest : StringSpec({
         deck.asList().groupingBy { c -> Pair(c.rank, c.suit) }
             .eachCount()
             .all { i -> i.value == 1 } shouldBe true
+        deck.isEmpty shouldBe false
     }
 
     "create empty italian card's deck" {
@@ -46,6 +47,7 @@ class ItalianCardTest : StringSpec({
         emptyDeck.size shouldBe 0
         emptyDeck.asList().groupingBy { c -> c.suit }.eachCount() shouldBe mapOf()
         emptyDeck.asList().groupingBy { c -> c.rank }.eachCount() shouldBe mapOf()
+        emptyDeck.isEmpty shouldBe true
     }
 
     "shuffle italian card's deck check not same position" {
@@ -116,7 +118,7 @@ class ItalianCardTest : StringSpec({
 
     "last card from an empty deck should be null" {
         val (_, newDeck) = deck.divideCardsFairly(5)
-        newDeck.firstCard shouldBe null
+        newDeck.lastCard shouldBe null
     }
 
     "get card deck" {
