@@ -25,10 +25,13 @@ class ItalianSuitsDeckFactory : DeckFactory<Card> {
                 return getDeckFrom(cards.shuffled().toSet())
             }
 
-            override fun divideCardsFairly(players: Int): Pair<List<List<Card>>, Deck<Card>> {
+            override fun divideCardsFairly(players: Int): Pair<List<Set<Card>>, Deck<Card>> {
                 if (players == 0 || cards.size % players != 0 || cards.isEmpty())
                     throw NotDivideFairlyException()
-                return Pair(cards.chunked(cards.size / players), getEmptyDeck())
+                return Pair(
+                    cards.chunked(cards.size / players)
+                        .map { it.toSet() }, getEmptyDeck()
+                )
             }
 
             override fun asList(): List<Card> {

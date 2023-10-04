@@ -39,11 +39,11 @@ interface Deck<T : Card> : CardsAccumulator<T> {
      *
      * @param players the number of players
      *
-     * @return A list of size players, each contains a list with (size % players) cards
+     * @return a Pair of list of set of cards and the empty deck
      * @throws NotDivideFairlyException if size % players is not 0
      */
     @Throws(NotDivideFairlyException::class)
-    fun divideCardsFairly(players: Int): Pair<List<List<T>>, Deck<T>>
+    fun divideCardsFairly(players: Int): Pair<List<Set<T>>, Deck<T>>
 
     /**
      * Extract the card at [i] position from the deck
