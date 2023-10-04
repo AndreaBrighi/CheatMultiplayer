@@ -18,6 +18,13 @@ subprojects {
     apply(plugin = "org.danilopianini.multi-jvm-test-plugin")
     apply(plugin = "jacoco")
 
+    tasks.jacocoTestReport {
+        dependsOn(tasks.test)
+        reports {
+            xml.required.set(true)
+        }
+    }
+
     tasks.test {
         useJUnitPlatform()
     }

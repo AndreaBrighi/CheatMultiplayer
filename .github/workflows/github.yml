@@ -42,7 +42,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Unit test with Gradle
-        run: ./gradlew test jacocoTestReport
+        run: ./gradlew jacocoTestReport
+
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
@@ -51,3 +52,10 @@ jobs:
             **/test-results/**/*.xml
             **/test-results/**/*.trx
             **/test-results/**/*.json
+      - name: Add coverage to PR
+        if: always()
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: |
+            ${{ github.workspace }}/**/build/reports/jacoco/**/*.xml
+          token: ${{github.token}}
