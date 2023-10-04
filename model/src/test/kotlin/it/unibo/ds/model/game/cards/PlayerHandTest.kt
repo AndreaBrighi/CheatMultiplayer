@@ -58,25 +58,12 @@ class PlayerHandTest : StringSpec({
         newHand.isEmpty shouldBe true
     }
 
-    "Player hand remove cards, but they are not present" {
+    "Player remove cards from his hand, but they are not present" {
         val hand = cheatFactory.createPlayerHand(setOf(aceOfSwords))
-        shouldThrow<CardsNotInHandException> {
+        val exception = shouldThrow<CardsNotInHandException> {
             hand.removeCards(setOf(swordsKing))
         }
-    }
-
-    "Player remove a card" {
-        val hand = cheatFactory.createPlayerHand(setOf(aceOfSwords))
-        hand.canCardsBeRemoved(setOf(aceOfSwords)) shouldBe true
-        hand.removeCards(setOf(aceOfSwords))
-    }
-
-    "Player remove a card, but it is not present" {
-        val hand = cheatFactory.createPlayerHand(setOf(aceOfSwords))
-        hand.canCardsBeRemoved(setOf(swordsKing)) shouldBe false
-        shouldThrow<CardsNotInHandException> {
-            hand.removeCards(setOf(swordsKing))
-        }
+        exception.notPresentCards shouldBe setOf(swordsKing)
     }
 
     "Player remove a card, but it is a complete rank" {
@@ -85,6 +72,14 @@ class PlayerHandTest : StringSpec({
         shouldThrow<CardsCompleteRankDropException> {
             hand.removeCards(fullRankKings)
         }
+    }
+
+    "Player remove cards, but only one is present" {
+        val hand = cheatFactory.createPlayerHand(setOf(aceOfSwords))
+        val exception = shouldThrow<CardsNotInHandException> {
+            hand.removeCards(setOf(swordsKing, aceOfSwords))
+        }
+        exception.notPresentCards shouldBe setOf(swordsKing)
     }
 
     "Player hand drop cards" {

@@ -126,7 +126,7 @@ class CheatAccumulatorFactory : AccumulatorFactory<Card> {
 
             override fun canCardsBeRemoved(cards: Set<Card>): Boolean {
                 return cards.all { c -> this.cards.contains(c) } &&
-                    cards.none { c -> completeRanks().contains(c.rank) }
+                        cards.none { c -> completeRanks().contains(c.rank) }
             }
 
             override fun cardsThatCanBeDropped(): Set<Card> {
@@ -136,7 +136,7 @@ class CheatAccumulatorFactory : AccumulatorFactory<Card> {
             @Throws(CardsNotInHandException::class, CardsCompleteRankDropException::class)
             override fun removeCards(cards: Set<Card>): PlayerHand<Card> {
                 if (!this.cards.containsAll(cards)) {
-                    throw CardsNotInHandException(cards.filter { c -> !this.cards.contains(c) })
+                    throw CardsNotInHandException(cards.filter { c -> !this.cards.contains(c) }.toSet())
                 }
                 if (!canCardsBeRemoved(cards)) {
                     throw CardsCompleteRankDropException(this, cards)

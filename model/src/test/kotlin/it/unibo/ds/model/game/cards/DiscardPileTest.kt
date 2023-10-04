@@ -21,7 +21,7 @@ class DiscardPileTest : StringSpec({
     val cheatFactory = CheatAccumulatorFactory()
     val deck: Deck<Card> = deckFactory.getFullDeck()
     val allKing = ItalianSuits.entries.map { s -> ItalianCard(ItalianRanks.KING, s) }.toSet()
-    val firstCard = deck[0]
+    val firstCard = deck[0]!!
 
     "Create a discard pile, empty by default" {
         val discard = cheatFactory.createDiscardPile()
