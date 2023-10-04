@@ -14,9 +14,9 @@ import it.unibo.ds.model.cards.exception.NotDivideFairlyException
  */
 interface Deck<T : Card> : CardsAccumulator<T> {
 
-    val firstCard: T
+    val firstCard: T?
 
-    val lastCard: T
+    val lastCard: T?
 
     /**
      * Return the card at i position
@@ -26,8 +26,7 @@ interface Deck<T : Card> : CardsAccumulator<T> {
      * @return the card at position i
      * @throws IndexOutOfBoundsException if i greater or equal deck size
      */
-    @Throws(IndexOutOfBoundsException::class)
-    operator fun get(i: Int): T
+    operator fun get(i: Int): T?
 
     /**
      * Shuffle the current deck of card
@@ -45,7 +44,9 @@ interface Deck<T : Card> : CardsAccumulator<T> {
      * @throws NotDivideFairlyException if size % players is not 0
      */
     @Throws(NotDivideFairlyException::class)
-    fun divideCardsFairly(players: Int): List<List<T>>
+    fun divideCardsFairly(players: Int): Pair<List<List<T>>, Deck<T>>
+
+    fun extractCardAt(i: Int): Pair<T?, Deck<T>>
 
     /**
      * return the deck as list of cards
