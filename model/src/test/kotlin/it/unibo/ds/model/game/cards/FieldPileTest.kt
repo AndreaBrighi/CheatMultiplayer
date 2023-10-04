@@ -17,7 +17,7 @@ class FieldPileTest : StringSpec({
     val cheatFactory = CheatAccumulatorFactory()
     val deck: Deck<Card> = deckFactory.getFullDeck()
     val field = cheatFactory.createFieldPile()
-    val firstCard = deck[0]
+    val firstCard = deck[0]!!
 
     "Create a field pile, empty by default" {
         field.size shouldBe emptySize
