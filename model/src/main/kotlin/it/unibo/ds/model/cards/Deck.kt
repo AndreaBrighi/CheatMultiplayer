@@ -7,8 +7,8 @@ import it.unibo.ds.model.cards.exception.NotDivideFairlyException
  *
  * @param T the type of the card of the deck
  *
- * @property firstCard return the first card on the top of the deck and remove it from the deck
- * @property lastCard return the first card on the bottom of the deck and remove it from the deck
+ * @property firstCard return the first card on the top of the deck and remove it from the deck (if the deck is empty return null)
+ * @property lastCard return the first card on the bottom of the deck and remove it from the deck (if the deck is empty return null)
  * @property isEmpty return true if there are no cards in the deck
  * @property size the number of card in the deck
  */
@@ -19,12 +19,11 @@ interface Deck<T : Card> : CardsAccumulator<T> {
     val lastCard: T?
 
     /**
-     * Return the card at i position
+     * Return the card at [i] position
      *
      * @param i the index of the card in the deck
      *
-     * @return the card at position i
-     * @throws IndexOutOfBoundsException if i greater or equal deck size
+     * @return the card at position i, if [i] is greater or equal deck size return null
      */
     operator fun get(i: Int): T?
 
@@ -46,6 +45,15 @@ interface Deck<T : Card> : CardsAccumulator<T> {
     @Throws(NotDivideFairlyException::class)
     fun divideCardsFairly(players: Int): Pair<List<List<T>>, Deck<T>>
 
+    /**
+     * Extract the card at [i] position from the deck
+     *
+     * @param i the index of the card in the deck
+     *
+     * @return a Pair of the card at position [i] and the deck without the card,
+     * if the deck is empty return a Pair of null and the deck,
+     * if [i] is greater or equal deck size return a Pair of null and the deck
+     */
     fun extractCardAt(i: Int): Pair<T?, Deck<T>>
 
     /**
