@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.taskTree)
     alias(libs.plugins.dokka)
     alias(libs.plugins.kover)
-    alias(libs.plugins.multiJvmTesting)
 }
 
 allprojects {
@@ -15,18 +14,9 @@ allprojects {
 subprojects {
     apply(plugin = "kotlin")
     apply(plugin = "java")
-    apply(plugin = "org.danilopianini.multi-jvm-test-plugin")
     apply(plugin = "org.jetbrains.kotlinx.kover")
-
-    tasks.koverXmlReport {
-        dependsOn(tasks.test)
-    }
 
     tasks.test {
         useJUnitPlatform()
-    }
-
-    multiJvm {
-        maximumSupportedJvmVersion.set(latestJavaSupportedByGradle)
     }
 }
