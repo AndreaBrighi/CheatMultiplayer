@@ -42,7 +42,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Unit test with Gradle
-        run: ./gradlew jacocoTestReport
+        run: ./gradlew koverXmlReport
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -57,5 +57,5 @@ jobs:
         uses: madrapps/jacoco-report@v1.6.1
         with:
           paths: |
-            ${{ github.workspace }}/**/build/reports/jacoco/**/*.xml
+            ${{ github.workspace }}/**/build/reports/kover/**/*.xml
           token: ${{github.token}}
