@@ -5,7 +5,7 @@ kotlin = "1.9.10"
 gradle = "8.1.1"
 kotlinxCoroutines = "1.7.3"
 gitSemVer = "2.0.1"
-kotestTestcontainers = "1.19.0"
+kotestTestcontainers = "2.0.2"
 
 [libraries]
 kotest-junit5-jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotest" }
