@@ -4,7 +4,7 @@ package it.unibo.ds.model.game.event
  * Represents a game event consumer.
  *
  */
-interface EventConsumer {
+fun interface EventConsumer {
 
     /**
      * Consumes the given event.
