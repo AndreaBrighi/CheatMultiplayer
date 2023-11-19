@@ -53,9 +53,15 @@ jobs:
             **/test-results/**/*.trx
             **/test-results/**/*.json
       - name: Add coverage to PR
+        id: kover
+        uses: mi-kas/kover-report@v1
         if: always()
-        uses: madrapps/jacoco-report@v1.6.1
         with:
-          paths: |
-            ${{ github.workspace }}/**/build/reports/kover/**/*.xml
+          path: |
+            ${{ github.workspace }}/model/build/reports/kover/report.xml
           token: ${{github.token}}
+          title: Code Coverage
+          update-comment: false
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
+          coverage-counter-type: LINE
