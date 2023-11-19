@@ -61,7 +61,7 @@ jobs:
             ${{ github.workspace }}/model/build/reports/kover/report.xml
           token: ${{github.token}}
           title: Code Coverage
-          update-comment: true
+          update-comment: false
           min-coverage-overall: 80
           min-coverage-changed-files: 80
           coverage-counter-type: LINE
