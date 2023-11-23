@@ -33,7 +33,7 @@ coroutines = [
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 dokka = "org.jetbrains.dokka:1.9.10"
-kotlin-qa = { id = "org.danilopianini.gradle-kotlin-qa", version = "0.54.0" }
+kotlin-qa = { id = "org.danilopianini.gradle-kotlin-qa", version = "0.54.1" }
 taskTree = { id = "com.dorongold.task-tree", version = "2.1.1" }
 gitSemVer = { id = "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin", version.ref = "gitSemVer" }
 multiJvmTesting = { id = "org.danilopianini.multi-jvm-test-plugin", version = "0.5.6" }
