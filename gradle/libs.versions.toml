@@ -1,7 +1,7 @@
 [versions]
 mockk = "1.13.8"
 kotest = "5.8.0"
-kotlin = "1.9.20"
+kotlin = "1.9.21"
 gradle = "8.1.1"
 kotlinxCoroutines = "1.7.3"
 gitSemVer = "2.0.2"
