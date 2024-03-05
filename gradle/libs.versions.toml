@@ -3,7 +3,7 @@ mockk = "1.13.9"
 kotest = "5.8.0"
 kotlin = "1.9.22"
 gradle = "8.1.1"
-kotlinxCoroutines = "1.7.3"
+kotlinxCoroutines = "1.8.0"
 gitSemVer = "3.1.2"
 kotestTestcontainers = "2.0.2"
 
