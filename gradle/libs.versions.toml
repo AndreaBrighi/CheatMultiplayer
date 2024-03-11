@@ -1,6 +1,6 @@
 [versions]
 mockk = "1.13.10"
-kotest = "5.8.0"
+kotest = "5.8.1"
 kotlin = "1.9.23"
 gradle = "8.1.1"
 kotlinxCoroutines = "1.8.0"
