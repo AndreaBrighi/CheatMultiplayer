@@ -1,0 +1,25 @@
+@startuml
+actor "User" as user
+participant "Client" as client
+participant "Server" as server
+
+user -> client : play request
+client -> client : generate public/private key pair
+client -> client : store private key locally
+client -> server : join lobby queue\n(send public key)
+
+server -> server : store public key (in memory)
+server -> server : match players
+server -> server : generate deck
+server -> server : generate players' hands
+server -> server : encrypt each hand\nwith recipient's public key
+
+server -> client : start game notification
+note right of client
+For each player:
+- all players' public keys
+- all encrypted hands
+end note
+
+client -> user : game started
+@enduml

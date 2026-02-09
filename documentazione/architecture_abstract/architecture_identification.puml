@@ -1,0 +1,24 @@
+@startuml
+
+node "Server" as server {
+    component "Identificator" as identificator
+    artifact "token"
+    component "Lobby" as lobby
+}
+
+database "Database" as db {
+    
+}
+
+node "Client1" as client1 {
+    component "Identification Module" as IMC1
+    component "Lobby Module" as LMC1
+    component "Game Module" as GMC1
+}
+
+IMC1 --(0 identificator 
+
+identificator --> db
+
+@enduml
+

@@ -1,0 +1,37 @@
+@startuml
+
+node "Client1" as client1 {
+    component "Identification Module" as IMC1
+    component "Lobby Module" as LMC1
+    component "Game Module" as GMC1
+}
+
+node "Client2" as client2 {
+    component "Identification Module" as IMC2
+    component "Lobby Module" as LMC2
+    component "Game Module" as GMC2
+}
+
+node "Client3" as client3 {
+    component "Identification Module" as IMC3
+    component "Lobby Module" as LMC3
+    component "Game Module" as GMC3
+}
+
+node "Client4" as client4 {
+    component "Identification Module" as IMC4
+    component "Lobby Module" as LMC4
+    component "Game Module" as GMC4
+}
+
+node "Broker" as broker {
+    interface "MQTT" as mqtt
+}
+
+GMC1 <--> mqtt
+GMC2 <---> mqtt
+GMC3 <--> mqtt
+GMC4 <---> mqtt
+
+@enduml
+

@@ -1,0 +1,14 @@
+@startuml
+
+node "Client" as client {
+    component "Identification Module" as IMC
+    component "Lobby Module" as LMC
+    component "Game Module" as GMC
+    component "Distributed Protocol Module" as DGC
+}
+
+LMC ..> IMC : uses
+GMC <.. LMC : uses
+GMC ..> DGC : uses
+
+@enduml
