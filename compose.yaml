@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:18.1
+    environment:
+      POSTGRES_DB: your_database
+      POSTGRES_USER: your_user
+      POSTGRES_PASSWORD: your_password
+    volumes:
+      - db-data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+volumes:
+  db-data:
