@@ -1,8 +1,8 @@
 package org.example.server.businessLayer
 
+import org.example.server.businessLayer.adapter.TokenResponseModel
 import org.example.server.businessLayer.adapter.login.LoginRequestModel
 import org.example.server.businessLayer.adapter.login.LoginResponseModel
-import org.example.server.businessLayer.adapter.TokenResponseModel
 import org.example.server.businessLayer.adapter.user.UserDataSourceRequestModel
 import org.example.server.businessLayer.adapter.user.UserRequestModel
 import org.example.server.businessLayer.adapter.user.UserResponseModel
@@ -44,7 +44,14 @@ class UserRegisterUseCase(
     }
 
     override fun login(requestModel: LoginRequestModel): Result<LoginResponseModel> {
-        TODO("Not yet implemented")
+        val hashedPassword = userSecurity.getHash(requestModel.password)
+        val exist = userDataSourceGateway.checkUserAndPassword(requestModel.username, hashedPassword)
+        if (!exist) {
+            return Result.failure(Exception("User not found or wrong password"))
+        }
+        val token = userSecurity.generateToken(requestModel.username)
+        val loginResponseModel = LoginResponseModel(requestModel.username, token)
+        return Result.success(loginResponseModel)
     }
 
     override fun checkUserToken(token: String): Result<TokenResponseModel> {
