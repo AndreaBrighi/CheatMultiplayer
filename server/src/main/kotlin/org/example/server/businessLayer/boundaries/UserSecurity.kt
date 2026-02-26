@@ -8,7 +8,7 @@ interface UserSecurity {
 
     fun generateToken(username: String): String
 
-    fun validateToken(token: String): Result<Boolean>
+    fun isTokenValid(token: String): Result<Boolean>
 
     fun tokenUser(token: String): String
 }

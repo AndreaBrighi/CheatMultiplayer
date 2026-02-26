@@ -40,12 +40,12 @@ class UserSecurityImpl(
         return token
     }
 
-    override fun validateToken(token: String): Result<Boolean> =
+    override fun isTokenValid(token: String): Result<Boolean> =
         try {
             Result.success(!isTokenExpired(token))
-        } catch (e: ExpiredJwtException) {
+        } catch (_: ExpiredJwtException) {
             Result.success(false)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Result.failure(IllegalArgumentException("Invalid token"))
         }
 
