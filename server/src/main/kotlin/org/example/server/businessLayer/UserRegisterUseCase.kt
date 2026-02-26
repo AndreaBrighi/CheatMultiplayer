@@ -44,10 +44,9 @@ class UserRegisterUseCase(
     }
 
     override fun login(requestModel: LoginRequestModel): Result<LoginResponseModel> {
-        val hashedPassword = userSecurity.getHash(requestModel.password)
-        val exist = userDataSourceGateway.checkUserAndPassword(requestModel.username, hashedPassword)
-        if (!exist) {
-            return Result.failure(Exception("User not found or wrong password"))
+        val user = userDataSourceGateway.findUser(requestModel.username) ?: return Result.failure(Exception("User not found"))
+        if (!userSecurity.checkPassword(requestModel.password, user.password)) {
+            return Result.failure(Exception("Invalid password"))
         }
         val token = userSecurity.generateToken(requestModel.username)
         val loginResponseModel = LoginResponseModel(requestModel.username, token)
