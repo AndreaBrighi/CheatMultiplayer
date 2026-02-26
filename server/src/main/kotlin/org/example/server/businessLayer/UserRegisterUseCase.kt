@@ -11,6 +11,7 @@ import org.example.server.businessLayer.boundaries.UserRegisterDataSourceGateway
 import org.example.server.businessLayer.boundaries.UserSecurity
 import org.example.server.businessLayer.exception.PasswordToShortException
 import org.example.server.businessLayer.exception.UserAlreadyPresentException
+import org.example.server.businessLayer.exception.UserNotFound
 import org.example.server.domainLayer.User
 import java.time.LocalDateTime
 
@@ -23,7 +24,6 @@ class UserRegisterUseCase(
         if (userDataSourceGateway.existsByName(requestModel.name)) {
             return Result.failure(UserAlreadyPresentException())
         }
-
         if (requestModel.password.length < 8) {
             return Result.failure(PasswordToShortException())
         }
@@ -36,15 +36,21 @@ class UserRegisterUseCase(
                 hashedPassword,
                 now,
             )
-        userDataSourceGateway.save(userDataSourceModel)
+        val saveResult = userDataSourceGateway.save(userDataSourceModel)
+        if (saveResult.isFailure) {
+            return Result.failure(saveResult.exceptionOrNull() ?: Exception("Unknown error"))
+        }
         val token = userSecurity.generateToken(user.name)
-
         val accountResponseModel = UserResponseModel(user.name, token, now.toString())
         return Result.success(accountResponseModel)
     }
 
     override fun login(requestModel: LoginRequestModel): Result<LoginResponseModel> {
-        val user = userDataSourceGateway.findUser(requestModel.username) ?: return Result.failure(Exception("User not found"))
+        val findUserResult = userDataSourceGateway.findUser(requestModel.username)
+        if (findUserResult.isFailure) {
+            return Result.failure(UserNotFound())
+        }
+        val user = findUserResult.getOrNull() ?: return Result.failure(UserNotFound())
         if (!userSecurity.checkPassword(requestModel.password, user.password)) {
             return Result.failure(Exception("Invalid password"))
         }

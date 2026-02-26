@@ -6,7 +6,7 @@ import org.example.server.businessLayer.adapter.user.UserDataSourceRequestModel
 interface UserRegisterDataSourceGateway {
     fun existsByName(name: String): Boolean
 
-    fun save(requestModel: UserDataSourceRequestModel)
+    fun save(requestModel: UserDataSourceRequestModel): Result<Long>
 
-    fun findUser(name: String): LoginDataSourceResponseModel?
+    fun findUser(name: String): Result<LoginDataSourceResponseModel>
 }
