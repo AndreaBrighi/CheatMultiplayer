@@ -5,9 +5,8 @@ import org.example.server.businessLayer.adapter.user.UserDataSourceRequestModel
 import org.example.server.businessLayer.boundaries.UserRegisterDataSourceGateway
 
 class UserRegisterDataSourceGatewayImpl(
-    userRepository: UserRepository,
+    val userRepository: UserRepository,
 ) : UserRegisterDataSourceGateway {
-
     override fun existsByName(name: String): Boolean {
         TODO("Not yet implemented")
     }
@@ -16,7 +15,11 @@ class UserRegisterDataSourceGatewayImpl(
         TODO("Not yet implemented")
     }
 
-    override fun findUser(name: String): LoginDataSourceResponseModel? {
-        TODO("Not yet implemented")
-    }
+    override fun findUser(name: String): LoginDataSourceResponseModel? =
+        userRepository.findByName(name)?.let { user ->
+            LoginDataSourceResponseModel(
+                name = user.name,
+                password = user.password,
+            )
+        }
 }
