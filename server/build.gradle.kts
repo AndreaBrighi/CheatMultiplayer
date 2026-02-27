@@ -29,7 +29,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation(libs.springdoc.openapi)
+    implementation(libs.springdoc.openapi) {
+        exclude(group = "org.apache.commons", module = "commons-lang3")
+    }
+    // commons-lang3 managed via dependencyManagement below (pin to a safe version there)
     implementation(libs.jwt)
     runtimeOnly(libs.postgresql)
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -53,6 +56,14 @@ dependencyManagement {
     imports {
         mavenBom(
             libs.testcontainers.bom
+                .get()
+                .toString(),
+        )
+    }
+    dependencies {
+        // Force a safe commons-lang3 across the project to avoid transitive vulnerable versions
+        dependency(
+            libs.apache.commons.lang3
                 .get()
                 .toString(),
         )

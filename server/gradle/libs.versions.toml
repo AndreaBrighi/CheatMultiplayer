@@ -8,6 +8,7 @@ spring-dependency-management = "1.1.7"
 springdoc-openapi = "2.6.0"
 jwt = "0.12.6"
 testcontainers = "1.18.3"
+apache-commons-lang3 = "3.18.0"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-jvm" }
@@ -36,6 +37,8 @@ testcontainers-bom = { group = "org.testcontainers", name = "testcontainers-bom"
 # Add module aliases and a bundle so build scripts can refer to libs.bundles.testcontainers
 testcontainersJunit = { group = "org.testcontainers", name = "junit-jupiter"}
 testcontainersPostgresql = { group = "org.testcontainers", name = "postgresql" }
+
+apache-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "apache-commons-lang3" }
 
 [bundles]
 # Convenience bundle to pull Testcontainers modules with one alias
