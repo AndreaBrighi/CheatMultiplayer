@@ -1,14 +1,13 @@
 [versions]
-kotlin-jvm = "1.9.25"
-plugin-spring = "1.9.25"
-plugin-jpa = "1.9.25"
+kotlin-jvm = "2.2.0"
+plugin-spring = "2.2.0"
+plugin-jpa = "2.2.0"
 flyway = "9.22.0"
-spring-boot = "3.3.5"
+spring-boot = "3.5.11"
 spring-dependency-management = "1.1.7"
-springdoc-openapi = "2.6.0"
+springdoc-openapi = "2.8.0"
 jwt = "0.12.6"
-testcontainers = "1.18.3"
-apache-commons-lang3 = "3.18.0"
+testcontainers = "2.0.2"
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-jvm" }
@@ -21,14 +20,16 @@ spring-dependency-management = { id = "io.spring.dependency-management", version
 [libraries]
 springdoc-openapi = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc-openapi" }
 archunit = { group = "com.tngtech.archunit", name = "archunit", version = "1.3.0" }
-jwt = { group = "io.jsonwebtoken", name = "jjwt", version.ref = "jwt" }
+jwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jwt" }
+jwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jwt" }
+jwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref = "jwt" }
 mockito-kotlin = {group = "org.mockito.kotlin", name = "mockito-kotlin", version = "5.4.0" }
 
 # DB / Jackson / Flyway libraries
 postgresql = { group = "org.postgresql", name = "postgresql", version = "42.7.7" }
 h2 = { group = "com.h2database", name = "h2", version = "2.2.224" }
-jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.17.2" }
-flyway-core = { group = "org.flywaydb", name = "flyway-core", version = "9.22.0" }
+jackson-module-kotlin = { group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin" }
+flyway-core = { group = "org.flywaydb", name = "flyway-core", version.ref = "flyway" }
 
 # Testcontainers BOM only (keep BOM versioned)
 # the BOM import will provide Individual Testcontainers module versions in the build
@@ -37,8 +38,6 @@ testcontainers-bom = { group = "org.testcontainers", name = "testcontainers-bom"
 # Add module aliases and a bundle so build scripts can refer to libs.bundles.testcontainers
 testcontainersJunit = { group = "org.testcontainers", name = "junit-jupiter"}
 testcontainersPostgresql = { group = "org.testcontainers", name = "postgresql" }
-
-apache-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "apache-commons-lang3" }
 
 [bundles]
 # Convenience bundle to pull Testcontainers modules with one alias
