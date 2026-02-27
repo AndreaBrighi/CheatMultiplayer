@@ -29,7 +29,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(libs.springdoc.openapi)
     implementation(libs.jwt)
-    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly(libs.postgresql)
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
@@ -38,6 +38,20 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(libs.h2) // Add H2 for in-memory database during tests
+
+    // Testcontainers for integration tests with real PostgreSQL
+    testImplementation(libs.bundles.testcontainers)
+}
+dependencyManagement {
+    imports {
+        mavenBom(
+            libs.testcontainers.bom
+                .get()
+                .toString(),
+        )
+    }
+}
 }
 
 kotlin {
