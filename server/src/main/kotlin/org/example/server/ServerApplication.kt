@@ -1,4 +1,3 @@
-
 package org.example.server
 
 import org.springframework.boot.autoconfigure.SpringBootApplication

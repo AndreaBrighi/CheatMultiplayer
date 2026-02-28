@@ -1,77 +1,48 @@
 package org.example.server
 
+import org.example.server.businessLayer.boundaries.UserSecurity
+import org.example.server.interfaceAdaptersLayer.controllers.dto.LoginRequestDto
 import org.example.server.interfaceAdaptersLayer.persistence.UserRepository
 import org.example.server.interfaceAdaptersLayer.persistence.dao.UserEntity
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.LocalDateTime
 
+@Testcontainers
+@ActiveProfiles("container")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class ApplicationIntegrationTest {
     companion object {
-        private var postgres: PostgreSQLContainer<*>? = null
+        @Container
+        val postgres =
+            PostgreSQLContainer("postgres:18.1")
+                .withDatabaseName("testdb")
+                .withUsername("test")
+                .withPassword("test")
 
         @JvmStatic
         @DynamicPropertySource
-        fun properties(registry: DynamicPropertyRegistry) {
-            // Allow overriding the Docker availability check via env var (useful locally/CI)
-            val forceTestcontainers = System.getenv("FORCE_TESTCONTAINERS")?.toBoolean() ?: false
-
-            var dockerAvailable = false
-            try {
-                dockerAvailable = DockerClientFactory.instance().isDockerAvailable
-            } catch (e: Throwable) {
-                // ignore - we'll decide based on force flag
-            }
-
-            if (!dockerAvailable && forceTestcontainers) {
-                // If forced, attempt to use Docker anyway (start will be attempted below and may fail)
-                dockerAvailable = true
-            }
-
-            if (dockerAvailable) {
-                try {
-                    postgres =
-                        PostgreSQLContainer("postgres:18.1")
-                            .withDatabaseName("testdb")
-                            .withUsername("test")
-                            .withPassword("test")
-                    postgres!!.start()
-
-                    // If start succeeded, register Postgres properties
-                    registry.add("spring.datasource.url") { postgres!!.jdbcUrl }
-                    registry.add("spring.datasource.username") { postgres!!.username }
-                    registry.add("spring.datasource.password") { postgres!!.password }
-                    registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
-                    registry.add("spring.jpa.hibernate.ddl-auto") { "update" }
-                    return
-                } catch (e: Throwable) {
-                    // Starting container failed even though we attempted it (Docker might be misconfigured)
-                    // Fall back to H2 below
-                    println("[Test Setup] Testcontainers requested but failed to start. Falling back to H2. Error: ${e.message}")
-                }
-            }
-
-            // Fallback to H2 in-memory when Docker is not available (CI/local dev without Docker)
-            registry.add("spring.datasource.url") { "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false" }
-            registry.add("spring.datasource.username") { "sa" }
-            registry.add("spring.datasource.password") { "" }
-            registry.add("spring.datasource.driver-class-name") { "org.h2.Driver" }
-            registry.add("spring.jpa.hibernate.ddl-auto") { "create-drop" }
-            registry.add("spring.jpa.database-platform") { "org.hibernate.dialect.H2Dialect" }
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.datasource.url", postgres::getJdbcUrl)
+            registry.add("spring.datasource.username", postgres::getUsername)
+            registry.add("spring.datasource.password", postgres::getPassword)
+            registry.add("spring.datasource.driver-class-name") { "org.postgresql.Driver" }
         }
     }
 
@@ -85,7 +56,15 @@ class ApplicationIntegrationTest {
     private lateinit var userRepository: UserRepository
 
     @Autowired
-    private lateinit var userSecurity: org.example.server.businessLayer.boundaries.UserSecurity
+    lateinit var jdbcTemplate: JdbcTemplate
+
+    @Autowired
+    private lateinit var userSecurity: UserSecurity
+
+    @AfterEach
+    fun cleanup() {
+        jdbcTemplate.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+    }
 
     @Test
     fun `login end-to-end with pre-inserted user`() {
@@ -96,14 +75,15 @@ class ApplicationIntegrationTest {
         val hashed = userSecurity.getHash(rawPassword)
         val now = LocalDateTime.now()
         val entity = UserEntity(name = username, password = hashed, createdAt = now)
-        userRepository.save(entity)
+        userRepository.saveAndFlush(entity)
 
         // call login endpoint
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_JSON
-        val loginReq = mapOf("username" to username, "password" to rawPassword)
+        val loginReq = LoginRequestDto(username, rawPassword)
         val loginResp =
-            restTemplate.postForEntity<String>("http://localhost:$port/api/login", HttpEntity(loginReq, headers))
+            restTemplate.postForEntity<String>(
+                "http://localhost:$port/api/login",
+                loginReq,
+            )
         assertEquals(HttpStatus.OK, loginResp.statusCode)
     }
 }
