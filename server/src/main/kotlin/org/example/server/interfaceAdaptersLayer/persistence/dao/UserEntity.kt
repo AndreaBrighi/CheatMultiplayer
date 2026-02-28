@@ -9,16 +9,16 @@ import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "USERS")
+@Table(name = "users")
 data class UserEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
+    @Column(name = "user_id")
     var id: Long = 0L,
-    @Column(name = "NAME", nullable = false)
+    @Column(nullable = false)
     val name: String = "",
-    @Column(name = "PASSWORD", nullable = false)
+    @Column(nullable = false)
     val password: String = "",
-    @Column(name = "CREATED_AT")
+    @Column(name = "created_at", nullable = true)
     val createdAt: LocalDateTime? = null,
 )
