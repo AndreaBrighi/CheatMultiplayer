@@ -11,6 +11,8 @@ group = "org.example"
 version = "0.0.1-SNAPSHOT"
 description = "server"
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -41,6 +43,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation(libs.archunit)
     testImplementation(libs.mockito.kotlin)
+    mockitoAgent(libs.mockito.core) { isTransitive = false }
     testImplementation(libs.jackson.module.kotlin)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation(libs.h2) // Add H2 for in-memory database during tests
@@ -68,4 +71,5 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    jvmArgs.add("-javaagent:${mockitoAgent.asPath}")
 }
