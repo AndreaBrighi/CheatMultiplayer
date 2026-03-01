@@ -47,7 +47,14 @@ class UserRegisterUseCaseTest :
 
             verify { userDataSourceGateway.existsByName("bob") }
             verify { userSecurity.getHash("strongpass") }
-            verify { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) }
+            verify {
+                userDataSourceGateway.save(
+                    match {
+                        it.name == "bob" &&
+                            it.password == "hashed"
+                    },
+                )
+            }
             verify { userSecurity.generateToken("bob") }
         }
 
