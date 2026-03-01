@@ -6,48 +6,32 @@ import kotlin.test.Test
 
 class CleanArchitectureTest {
     @Test
-    fun layerDependencies() {
-        val importedClasses = ClassFileImporter().importPackages("org.example.server")
-        val cleanArchitecture =
-            layeredArchitecture()
-                .consideringOnlyDependenciesInLayers()
-                .layer("Domain")
-                .definedBy("..domainLayer..")
-                .layer("Business")
-                .definedBy("..businessLayer..")
-                .layer("Adapter")
-                .definedBy("..interfaceAdaptersLayer..")
-                .whereLayer("Adapter")
-                .mayNotBeAccessedByAnyLayer()
-                .whereLayer("Business")
-                .mayOnlyBeAccessedByLayers("Adapter")
-                .whereLayer("Domain")
-                .mayOnlyBeAccessedByLayers("Business", "Adapter")
-        cleanArchitecture.check(importedClasses)
-    }
+    fun cleanArchitectureUncleBobStyle() {
+        val importedClasses =
+            ClassFileImporter().importPackages("org.example.server")
 
-    @Test
-    fun everythingPassThroughBusinessLayer() {
-        val importedClasses = ClassFileImporter().importPackages("org.example.server")
-        val ruleEverythingPassThroughBusinessLayer =
-            layeredArchitecture()
-                .consideringOnlyDependenciesInLayers()
-                .layer("Business")
-                .definedBy("..businessLayer..")
-                .layer("Controller")
-                .definedBy("..interfaceAdaptersLayer.controllers..")
-                .layer("Persistence")
-                .definedBy("..interfaceAdaptersLayer.persistence..")
-                .layer("Security")
-                .definedBy("..interfaceAdaptersLayer.security..")
-                .whereLayer("Persistence")
-                .mayNotBeAccessedByAnyLayer()
-                .whereLayer("Controller")
-                .mayNotBeAccessedByAnyLayer()
-                .whereLayer("Security")
-                .mayNotBeAccessedByAnyLayer()
-                .whereLayer("Business")
-                .mayOnlyBeAccessedByLayers("Controller", "Persistence", "Security")
-        ruleEverythingPassThroughBusinessLayer.check(importedClasses)
+        layeredArchitecture()
+            .consideringOnlyDependenciesInLayers()
+            .layer("Domain")
+            .definedBy("..domain..")
+            .layer("Application")
+            .definedBy("..application..")
+            .layer("Adapters")
+            .definedBy("..adapters..")
+            .layer("Infrastructure")
+            .definedBy("..infrastructure..")
+            // Domain
+            .whereLayer("Domain")
+            .mayNotAccessAnyLayer()
+            // Application
+            .whereLayer("Application")
+            .mayOnlyAccessLayers("Domain")
+            // Adapters
+            .whereLayer("Adapters")
+            .mayOnlyAccessLayers("Application", "Domain")
+            // Infrastructure
+            .whereLayer("Infrastructure")
+            .mayOnlyAccessLayers("Adapters", "Application", "Domain")
+            .check(importedClasses)
     }
 }

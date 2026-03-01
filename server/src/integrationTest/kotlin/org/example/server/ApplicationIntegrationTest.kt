@@ -5,10 +5,11 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import org.example.server.businessLayer.boundaries.UserSecurity
-import org.example.server.interfaceAdaptersLayer.controllers.dto.LoginRequestDto
-import org.example.server.interfaceAdaptersLayer.controllers.dto.LoginResponseDto
-import org.example.server.interfaceAdaptersLayer.persistence.UserRepository
+import org.example.server.adapters.controllers.dto.LoginRequestDto
+import org.example.server.adapters.controllers.dto.LoginResponseDto
+import org.example.server.application.ports.PasswordSecurity
+import org.example.server.application.ports.TokenSecurity
+import org.example.server.infrastructure.persistence.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
@@ -63,7 +64,10 @@ class ApplicationIntegrationTest : FunSpec() {
     private lateinit var jdbcTemplate: JdbcTemplate
 
     @Autowired
-    private lateinit var userSecurity: UserSecurity
+    private lateinit var tokenSecurity: TokenSecurity
+
+    @Autowired
+    private lateinit var passwordSecurity: PasswordSecurity
 
     @Autowired
     lateinit var objectMapper: ObjectMapper
@@ -78,7 +82,7 @@ class ApplicationIntegrationTest : FunSpec() {
             val rawPassword = "strongpass"
 
             // prepare user in DB
-            val hashed = userSecurity.getHash(rawPassword)
+            val hashed = passwordSecurity.hash(rawPassword)
             val now = LocalDateTime.now()
             jdbcTemplate.update(
                 """
