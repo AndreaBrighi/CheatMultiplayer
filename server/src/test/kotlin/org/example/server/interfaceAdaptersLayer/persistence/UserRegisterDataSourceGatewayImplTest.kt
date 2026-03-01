@@ -1,11 +1,13 @@
 package org.example.server.interfaceAdaptersLayer.persistence
 
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.extensions.spring.SpringExtension
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import org.example.server.businessLayer.adapter.user.UserDataSourceRequestModel
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import org.example.server.interfaceAdaptersLayer.persistence.dao.UserEntity
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.test.context.ActiveProfiles
@@ -13,68 +15,77 @@ import java.time.LocalDateTime
 
 @DataJpaTest
 @ActiveProfiles("test")
-class UserRegisterDataSourceGatewayImplTest(
+class UserRegisterDataSourceGatewayImplTest : FunSpec() {
+    override fun extensions() = listOf(SpringExtension)
+
     @Autowired
-    private val userRepository: UserRepository,
-) {
-    private val gateway = UserRegisterDataSourceGatewayImpl(userRepository)
+    lateinit var userRepository: UserRepository
 
-    @Test
-    fun `existsByName returns false when user absent and true when present`() {
-        // ensure empty
-        assertFalse(gateway.existsByName("noone"))
+    private lateinit var gateway: UserRegisterDataSourceGatewayImpl
 
-        // save directly via repository
-        val now = LocalDateTime.now()
-        val savedId =
-            userRepository
-                .save(
-                    org.example.server.interfaceAdaptersLayer.persistence.dao.UserEntity(
-                        name = "john",
-                        password = "p",
-                        createdAt = now,
-                    ),
-                ).id
+    init {
 
-        assertTrue(gateway.existsByName("john"))
-        assertTrue(savedId > 0)
-    }
+        beforeTest {
+            gateway = UserRegisterDataSourceGatewayImpl(userRepository)
+        }
 
-    @Test
-    fun `save persists user and returns id`() {
-        val now = LocalDateTime.now()
-        val req = UserDataSourceRequestModel("mary", "pwd", now)
+        test("existsByName returns false when user absent and true when present") {
 
-        val res = gateway.save(req)
-        assertTrue(res.isSuccess)
-        val id = res.getOrNull()
-        assertNotNull(id)
-        assertTrue(id!! > 0)
+            gateway.existsByName("noone").shouldBeFalse()
 
-        val persisted = userRepository.findById(id).orElse(null)
-        assertNotNull(persisted)
-        assertEquals("mary", persisted!!.name)
-    }
+            val now = LocalDateTime.now()
+            val savedId =
+                userRepository
+                    .save(
+                        UserEntity(
+                            name = "john",
+                            password = "p",
+                            createdAt = now,
+                        ),
+                    ).id
 
-    @Test
-    fun `findUser returns the expected LoginDataSourceResponseModel or failure`() {
-        val now = LocalDateTime.now()
-        val entity =
-            org.example.server.interfaceAdaptersLayer.persistence.dao.UserEntity(
-                name = "anna",
-                password = "hashpass",
-                createdAt = now,
-            )
-        userRepository.save(entity)
+            gateway.existsByName("john").shouldBeTrue()
+            (savedId > 0).shouldBeTrue()
+        }
 
-        val findRes = gateway.findUser("anna")
-        assertTrue(findRes.isSuccess)
-        val model = findRes.getOrNull()
-        assertNotNull(model)
-        assertEquals("anna", model!!.name)
-        assertEquals("hashpass", model.password)
+        test("save persists user and returns id") {
 
-        val missing = gateway.findUser("unknown")
-        assertTrue(missing.isFailure)
+            val now = LocalDateTime.now()
+            val req = UserDataSourceRequestModel("mary", "pwd", now)
+
+            val res = gateway.save(req)
+            res.isSuccess.shouldBeTrue()
+
+            val id = res.getOrNull()
+            id.shouldNotBeNull()
+            (id > 0).shouldBeTrue()
+
+            val persisted = userRepository.findById(id).orElse(null)
+            persisted.shouldNotBeNull()
+            persisted.name shouldBe "mary"
+        }
+
+        test("findUser returns the expected model or failure") {
+
+            val now = LocalDateTime.now()
+            val entity =
+                UserEntity(
+                    name = "anna",
+                    password = "hashpass",
+                    createdAt = now,
+                )
+            userRepository.save(entity)
+
+            val findRes = gateway.findUser("anna")
+            findRes.isSuccess.shouldBeTrue()
+
+            val model = findRes.getOrNull()
+            model.shouldNotBeNull()
+            model.name shouldBe "anna"
+            model.password shouldBe "hashpass"
+
+            val missing = gateway.findUser("unknown")
+            missing.isFailure.shouldBeTrue()
+        }
     }
 }

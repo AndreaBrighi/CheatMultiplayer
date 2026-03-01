@@ -1,18 +1,19 @@
 package org.example.server
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.extensions.spring.SpringExtension
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.example.server.businessLayer.boundaries.UserSecurity
 import org.example.server.interfaceAdaptersLayer.controllers.dto.LoginRequestDto
+import org.example.server.interfaceAdaptersLayer.controllers.dto.LoginResponseDto
 import org.example.server.interfaceAdaptersLayer.persistence.UserRepository
-import org.example.server.interfaceAdaptersLayer.persistence.dao.UserEntity
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.client.postForEntity
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
@@ -27,14 +28,20 @@ import java.time.LocalDateTime
 @ActiveProfiles("container")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class ApplicationIntegrationTest {
+class ApplicationIntegrationTest : FunSpec() {
+    override fun extensions() = listOf(SpringExtension)
+
     companion object {
         @Container
-        val postgres =
+        val postgres: PostgreSQLContainer<*> =
             PostgreSQLContainer("postgres:18.1")
                 .withDatabaseName("testdb")
                 .withUsername("test")
                 .withPassword("test")
+
+        init {
+            postgres.start()
+        }
 
         @JvmStatic
         @DynamicPropertySource
@@ -46,9 +53,6 @@ class ApplicationIntegrationTest {
         }
     }
 
-    @LocalServerPort
-    private var port: Int = 0
-
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
@@ -56,34 +60,49 @@ class ApplicationIntegrationTest {
     private lateinit var userRepository: UserRepository
 
     @Autowired
-    lateinit var jdbcTemplate: JdbcTemplate
+    private lateinit var jdbcTemplate: JdbcTemplate
 
     @Autowired
     private lateinit var userSecurity: UserSecurity
 
-    @AfterEach
-    fun cleanup() {
-        jdbcTemplate.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
-    }
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
-    @Test
-    fun `login end-to-end with pre-inserted user`() {
-        val username = "e2euser"
-        val rawPassword = "strongpass"
+    init {
+        afterTest {
+            jdbcTemplate.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+        }
 
-        // prepare user in DB
-        val hashed = userSecurity.getHash(rawPassword)
-        val now = LocalDateTime.now()
-        val entity = UserEntity(name = username, password = hashed, createdAt = now)
-        userRepository.saveAndFlush(entity)
+        test("login end-to-end with pre-inserted user") {
+            val username = "e2euser"
+            val rawPassword = "strongpass"
 
-        // call login endpoint
-        val loginReq = LoginRequestDto(username, rawPassword)
-        val loginResp =
-            restTemplate.postForEntity<String>(
-                "http://localhost:$port/api/login",
-                loginReq,
+            // prepare user in DB
+            val hashed = userSecurity.getHash(rawPassword)
+            val now = LocalDateTime.now()
+            jdbcTemplate.update(
+                """
+                INSERT INTO users (name, password, created_at)
+                VALUES (?, ?, ?)
+                """.trimIndent(),
+                username,
+                hashed,
+                now,
             )
-        assertEquals(HttpStatus.OK, loginResp.statusCode)
+
+            // call login endpoint
+            val loginReq = LoginRequestDto(username, rawPassword)
+            val loginResp =
+                restTemplate.postForEntity<LoginResponseDto>(
+                    "/api/login",
+                    loginReq,
+                )
+
+            loginResp.statusCode shouldBe HttpStatus.OK
+            loginResp.body shouldNotBe null
+            val body = loginResp.body!!
+            body.name shouldBe username
+            body.token.isNotBlank() shouldBe true
+        }
     }
 }

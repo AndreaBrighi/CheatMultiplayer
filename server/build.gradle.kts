@@ -11,8 +11,6 @@ group = "org.example"
 version = "0.0.1-SNAPSHOT"
 description = "server"
 
-val mockitoAgent = configurations.create("mockitoAgent")
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -23,13 +21,35 @@ repositories {
     mavenCentral()
 }
 
+// ===========================
+// INTEGRATION TEST CONFIG
+// ===========================
+
+val integrationTest by sourceSets.creating {
+    kotlin.srcDir("src/integrationTest/kotlin")
+    resources.srcDir("src/integrationTest/resources")
+
+    compileClasspath += sourceSets["main"].output +
+        configurations["testRuntimeClasspath"]
+
+    runtimeClasspath += output + compileClasspath
+}
+
+configurations[integrationTest.implementationConfigurationName]
+    .extendsFrom(configurations.testImplementation.get())
+
+configurations[integrationTest.runtimeOnlyConfigurationName]
+    .extendsFrom(configurations.testRuntimeOnly.get())
+
 dependencies {
+    // ===== MAIN =====
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation(libs.springdoc.openapi)
 
@@ -37,23 +57,43 @@ dependencies {
     runtimeOnly(libs.jwt.impl)
     runtimeOnly(libs.jwt.jackson)
     runtimeOnly(libs.postgresql)
+
+    implementation(libs.flyway.core)
+
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    // ===== UNIT TEST =====
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+
+    // Use Kotest bundle from version catalog
+    testImplementation(libs.bundles.kotest)
+    testImplementation(libs.mockk)
+
     testImplementation(libs.archunit)
-    testImplementation(libs.mockito.kotlin)
-    mockitoAgent(libs.mockito.core) { isTransitive = false }
     testImplementation(libs.jackson.module.kotlin)
+    testImplementation(libs.h2)
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation(libs.h2) // Add H2 for in-memory database during tests
 
-    // Testcontainers for integration tests with real PostgreSQL
-    testImplementation(platform(libs.testcontainers.bom))
-    testImplementation(libs.bundles.testcontainers)
+    // ===== INTEGRATION TEST =====
+    add("integrationTestImplementation", platform(libs.testcontainers.bom))
+    add("integrationTestImplementation", libs.bundles.testcontainers)
+}
 
-    // Flyway runtime
-    implementation(libs.flyway.core)
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xjsr305=strict",
+            "-Xannotation-default-target=param-property",
+        )
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    maxParallelForks = Runtime.getRuntime().availableProcessors() / 2
 }
 
 flyway {
@@ -63,13 +103,25 @@ flyway {
     locations = arrayOf("filesystem:src/main/resources/db/migration")
 }
 
-kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
-    }
+tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests"
+    group = "verification"
+
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+
+    shouldRunAfter(tasks.test)
+
+    useJUnitPlatform()
+
+    // Attiva automaticamente profilo container
+    systemProperty("spring.profiles.active", "container")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    jvmArgs.add("-javaagent:${mockitoAgent.asPath}")
+tasks.check {
+    dependsOn("integrationTest")
+}
+
+tasks.named<Copy>("processIntegrationTestResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
