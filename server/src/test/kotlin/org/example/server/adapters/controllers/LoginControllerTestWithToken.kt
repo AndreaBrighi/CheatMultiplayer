@@ -9,7 +9,6 @@ import org.example.server.application.ports.UserInputBoundary
 import org.example.server.application.ports.models.UserInfoResponse
 import org.example.server.application.ports.models.authentication.AuthenticatedUser
 import org.example.server.infrastructure.security.filter.JwtAuthenticationFilter
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
@@ -18,7 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder
 import java.time.LocalDateTime
 
-class LoginControllerGetUserHttpTest :
+class LoginControllerTestWithToken :
     FunSpec({
         test("GET /api/private/user with valid bearer token returns user info") {
             val userInputBoundary: UserInputBoundary = mockk()
