@@ -1,17 +1,17 @@
 package org.example.server.domain.model
 
 interface User {
-    val name: String
+    val username: String
 
     val password: String
 
     companion object {
         fun create(
-            name: String,
+            username: String,
             password: String,
         ): User =
             object : User {
-                override val name: String = name
+                override val username: String = username
                 override val password: String = password
             }
     }

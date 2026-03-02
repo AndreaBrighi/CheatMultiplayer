@@ -1,6 +1,6 @@
 package org.example.server.application.ports.models.login
 
 data class LoginResponseModel(
-    val name: String,
+    val username: String,
     val token: String,
 )

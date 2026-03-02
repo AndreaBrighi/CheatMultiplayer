@@ -4,7 +4,7 @@ import org.example.server.application.ports.PasswordSecurity
 import org.example.server.application.ports.TokenSecurity
 import org.example.server.application.ports.UserInputBoundary
 import org.example.server.application.ports.UserRegisterDataSourceGateway
-import org.example.server.application.ports.models.TokenResponseModel
+import org.example.server.application.ports.models.UserInfoResponse
 import org.example.server.application.ports.models.exception.PasswordToShortException
 import org.example.server.application.ports.models.exception.UserAlreadyPresentException
 import org.example.server.application.ports.models.exception.UserNotFound
@@ -23,7 +23,7 @@ class UserRegisterUseCase(
 ) : UserInputBoundary {
     override fun createUser(requestModel: UserRequestModel): Result<UserResponseModel> {
         val now = LocalDateTime.now()
-        if (userDataSourceGateway.existsByName(requestModel.name)) {
+        if (userDataSourceGateway.existsByUsername(requestModel.username)) {
             return Result.failure(UserAlreadyPresentException())
         }
         if (requestModel.password.length < 8) {
@@ -31,10 +31,10 @@ class UserRegisterUseCase(
         }
 
         val hashedPassword = passwordSecurity.hash(requestModel.password)
-        val user: User = User.Companion.create(requestModel.name, hashedPassword)
+        val user: User = User.create(requestModel.username, hashedPassword)
         val userDataSourceModel =
             UserDataSourceRequestModel(
-                user.name,
+                user.username,
                 hashedPassword,
                 now,
             )
@@ -42,8 +42,8 @@ class UserRegisterUseCase(
         if (saveResult.isFailure) {
             return Result.failure(saveResult.exceptionOrNull() ?: Exception("Unknown error"))
         }
-        val token = tokenSecurity.generateToken(user.name)
-        val accountResponseModel = UserResponseModel(user.name, token, now.toString())
+        val token = tokenSecurity.generateToken(user.username)
+        val accountResponseModel = UserResponseModel(user.username, token, now.toString())
         return Result.success(accountResponseModel)
     }
 
@@ -61,7 +61,13 @@ class UserRegisterUseCase(
         return Result.success(loginResponseModel)
     }
 
-    override fun checkUserToken(token: String): Result<TokenResponseModel> {
-        TODO("Not yet implemented")
+    override fun getUser(username: String): Result<UserInfoResponse> {
+        val findUserResult = userDataSourceGateway.findUser(username)
+        if (findUserResult.isFailure) {
+            return Result.failure(UserNotFound())
+        }
+        val user = findUserResult.getOrNull() ?: return Result.failure(UserNotFound())
+        val tokenResponseModel = UserInfoResponse(user.username, user.createdAt)
+        return Result.success(tokenResponseModel)
     }
 }

@@ -31,20 +31,20 @@ class UserRegisterDataSourceGatewayImplTest : FunSpec() {
 
         test("existsByName returns false when user absent and true when present") {
 
-            gateway.existsByName("noone").shouldBeFalse()
+            gateway.existsByUsername("noone").shouldBeFalse()
 
             val now = LocalDateTime.now()
             val savedId =
                 userRepository
                     .save(
                         UserEntity(
-                            name = "john",
+                            username = "john",
                             password = "p",
                             createdAt = now,
                         ),
                     ).id
 
-            gateway.existsByName("john").shouldBeTrue()
+            gateway.existsByUsername("john").shouldBeTrue()
             (savedId > 0).shouldBeTrue()
         }
 
@@ -62,7 +62,7 @@ class UserRegisterDataSourceGatewayImplTest : FunSpec() {
 
             val persisted = userRepository.findById(id).orElse(null)
             persisted.shouldNotBeNull()
-            persisted.name shouldBe "mary"
+            persisted.username shouldBe "mary"
         }
 
         test("findUser returns the expected model or failure") {
@@ -70,7 +70,7 @@ class UserRegisterDataSourceGatewayImplTest : FunSpec() {
             val now = LocalDateTime.now()
             val entity =
                 UserEntity(
-                    name = "anna",
+                    username = "anna",
                     password = "hashpass",
                     createdAt = now,
                 )
@@ -81,7 +81,7 @@ class UserRegisterDataSourceGatewayImplTest : FunSpec() {
 
             val model = findRes.getOrNull()
             model.shouldNotBeNull()
-            model.name shouldBe "anna"
+            model.username shouldBe "anna"
             model.password shouldBe "hashpass"
 
             val missing = gateway.findUser("unknown")

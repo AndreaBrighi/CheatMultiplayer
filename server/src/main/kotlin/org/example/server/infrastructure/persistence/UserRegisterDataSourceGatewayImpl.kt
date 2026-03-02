@@ -1,19 +1,19 @@
 package org.example.server.infrastructure.persistence
 
+import org.example.server.application.ports.UserRegisterDataSourceGateway
 import org.example.server.application.ports.models.login.LoginDataSourceResponseModel
 import org.example.server.application.ports.models.user.UserDataSourceRequestModel
-import org.example.server.application.ports.UserRegisterDataSourceGateway
 import org.example.server.infrastructure.persistence.entity.UserEntity
 
 class UserRegisterDataSourceGatewayImpl(
     val userRepository: UserRepository,
 ) : UserRegisterDataSourceGateway {
-    override fun existsByName(name: String): Boolean = userRepository.findByName(name) != null
+    override fun existsByUsername(username: String): Boolean = userRepository.findByUsername(username) != null
 
     override fun save(requestModel: UserDataSourceRequestModel): Result<Long> {
         val userEntity =
             UserEntity(
-                name = requestModel.name,
+                username = requestModel.username,
                 password = requestModel.password,
                 createdAt = requestModel.now,
             )
@@ -25,12 +25,13 @@ class UserRegisterDataSourceGatewayImpl(
         }
     }
 
-    override fun findUser(name: String): Result<LoginDataSourceResponseModel> =
-        userRepository.findByName(name)?.let { user ->
+    override fun findUser(username: String): Result<LoginDataSourceResponseModel> =
+        userRepository.findByUsername(username)?.let { user ->
             Result.success(
                 LoginDataSourceResponseModel(
-                    name = user.name,
+                    username = user.username,
                     password = user.password,
+                    createdAt = user.createdAt!!,
                 ),
             )
         } ?: Result.failure(Exception("User not found"))

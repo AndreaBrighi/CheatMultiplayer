@@ -4,9 +4,9 @@ import org.example.server.application.ports.models.login.LoginDataSourceResponse
 import org.example.server.application.ports.models.user.UserDataSourceRequestModel
 
 interface UserRegisterDataSourceGateway {
-    fun existsByName(name: String): Boolean
+    fun existsByUsername(username: String): Boolean
 
     fun save(requestModel: UserDataSourceRequestModel): Result<Long>
 
-    fun findUser(name: String): Result<LoginDataSourceResponseModel>
+    fun findUser(username: String): Result<LoginDataSourceResponseModel>
 }

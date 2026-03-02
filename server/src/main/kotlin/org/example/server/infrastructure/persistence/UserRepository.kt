@@ -7,12 +7,14 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface UserRepository : JpaRepository<UserEntity, Long> {
-    fun findByName(name: String): UserEntity?
+    fun findByUsername(username: String): UserEntity?
 
-    @Query("""
+    @Query(
+        """
         SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END
         FROM UserEntity u
-        WHERE u.name = :name
-    """)
-    fun test(name: String): Boolean
+        WHERE u.username = :username
+    """,
+    )
+    fun test(username: String): Boolean
 }

@@ -35,4 +35,20 @@ class LoginController(
             )
         }
     }
+
+        @GetMapping("private/user")
+        fun getUser(
+            @AuthenticationPrincipal principal: AuthenticatedUser
+        ): HttpEntity<Any> {
+            val response = userInputBoundary.getUser(principal.username)
+            return if (response.isSuccess) {
+                ResponseEntity(response.getOrNull() ?: false, HttpStatus.OK)
+            } else {
+                ResponseEntity(
+                    response.exceptionOrNull()?.message
+                        ?: "Invalid token",
+                    HttpStatus.UNAUTHORIZED,
+                )
+            }
+        }
 }

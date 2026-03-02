@@ -86,7 +86,7 @@ class ApplicationIntegrationTest : FunSpec() {
             val now = LocalDateTime.now()
             jdbcTemplate.update(
                 """
-                INSERT INTO users (name, password, created_at)
+                INSERT INTO users (username, password, created_at)
                 VALUES (?, ?, ?)
                 """.trimIndent(),
                 username,
@@ -105,7 +105,7 @@ class ApplicationIntegrationTest : FunSpec() {
             loginResp.statusCode shouldBe HttpStatus.OK
             loginResp.body shouldNotBe null
             val body = loginResp.body!!
-            body.name shouldBe username
+            body.username shouldBe username
             body.token.isNotBlank() shouldBe true
         }
     }

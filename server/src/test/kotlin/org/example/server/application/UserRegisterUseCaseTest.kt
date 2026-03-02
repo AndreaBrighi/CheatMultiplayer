@@ -19,6 +19,7 @@ import org.example.server.application.ports.models.login.LoginRequestModel
 import org.example.server.application.ports.models.user.UserDataSourceRequestModel
 import org.example.server.application.ports.models.user.UserRequestModel
 import org.example.server.application.usecases.UserRegisterUseCase
+import java.time.LocalDateTime
 
 class UserRegisterUseCaseTest :
     FunSpec({
@@ -33,27 +34,27 @@ class UserRegisterUseCaseTest :
         }
 
         test("createUser success returns UserResponseModel") {
-            val request = UserRequestModel(name = "bob", password = "strongpass")
+            val request = UserRequestModel(username = "bob", password = "strongpass")
 
-            every { userDataSourceGateway.existsByName(request.name) } returns false
+            every { userDataSourceGateway.existsByUsername(request.username) } returns false
             every { passwordSecurity.hash(request.password) } returns "hashed"
             every { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) } returns Result.success(1L)
-            every { tokenSecurity.generateToken(request.name) } returns "tok123"
+            every { tokenSecurity.generateToken(request.username) } returns "tok123"
 
             val result = useCase.createUser(request)
 
             result.isSuccess shouldBe true
             val value = result.getOrNull()
             value shouldNotBe null
-            value!!.name shouldBe "bob"
+            value!!.username shouldBe "bob"
             value.token shouldBe "tok123"
 
-            verify { userDataSourceGateway.existsByName("bob") }
+            verify { userDataSourceGateway.existsByUsername("bob") }
             verify { passwordSecurity.hash("strongpass") }
             verify {
                 userDataSourceGateway.save(
                     match {
-                        it.name == "bob" &&
+                        it.username == "bob" &&
                             it.password == "hashed"
                     },
                 )
@@ -62,9 +63,9 @@ class UserRegisterUseCaseTest :
         }
 
         test("createUser duplicate returns UserAlreadyPresentException") {
-            val request = UserRequestModel(name = "bob", password = "strongpass")
+            val request = UserRequestModel(username = "bob", password = "strongpass")
 
-            every { userDataSourceGateway.existsByName(request.name) } returns true
+            every { userDataSourceGateway.existsByUsername(request.username) } returns true
 
             val result = useCase.createUser(request)
 
@@ -77,9 +78,9 @@ class UserRegisterUseCaseTest :
         }
 
         test("createUser short password returns PasswordToShortException") {
-            val request = UserRequestModel(name = "bob", password = "short")
+            val request = UserRequestModel(username = "bob", password = "short")
 
-            every { userDataSourceGateway.existsByName(request.name) } returns false
+            every { userDataSourceGateway.existsByUsername(request.username) } returns false
 
             val result = useCase.createUser(request)
 
@@ -92,9 +93,9 @@ class UserRegisterUseCaseTest :
         }
 
         test("createUser save failure returns underlying exception") {
-            val request = UserRequestModel(name = "bob", password = "strongpass")
+            val request = UserRequestModel(username = "bob", password = "strongpass")
 
-            every { userDataSourceGateway.existsByName(request.name) } returns false
+            every { userDataSourceGateway.existsByUsername(request.username) } returns false
             every { passwordSecurity.hash(request.password) } returns "hashed"
             every { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) } returns Result.failure(Exception("db error"))
 
@@ -111,7 +112,11 @@ class UserRegisterUseCaseTest :
 
             every { userDataSourceGateway.findUser(request.username) } returns
                 Result.success(
-                    LoginDataSourceResponseModel(name = "alice", password = "hashedpwd"),
+                    LoginDataSourceResponseModel(
+                        username = "alice",
+                        password = "hashedpwd",
+                        createdAt = LocalDateTime.now(),
+                    ),
                 )
             every { passwordSecurity.matches(request.password, "hashedpwd") } returns true
             every { tokenSecurity.generateToken(request.username) } returns "tok-abc"
@@ -121,7 +126,7 @@ class UserRegisterUseCaseTest :
             result.isSuccess shouldBe true
             val value = result.getOrNull()
             value shouldNotBe null
-            value!!.name shouldBe "alice"
+            value!!.username shouldBe "alice"
             value.token shouldBe "tok-abc"
 
             verify { userDataSourceGateway.findUser(request.username) }
@@ -150,7 +155,7 @@ class UserRegisterUseCaseTest :
 
             every { userDataSourceGateway.findUser(request.username) } returns
                 Result.success(
-                    LoginDataSourceResponseModel(name = "alice", password = "hashedpwd"),
+                    LoginDataSourceResponseModel(username = "alice", password = "hashedpwd", LocalDateTime.now()),
                 )
             every { passwordSecurity.matches(request.password, "hashedpwd") } returns false
 
@@ -164,5 +169,28 @@ class UserRegisterUseCaseTest :
             verify { userDataSourceGateway.findUser(request.username) }
             verify { passwordSecurity.matches(request.password, "hashedpwd") }
             verify(exactly = 0) { tokenSecurity.generateToken(any()) }
+        }
+
+        test("get user by username success returns UserResponseModel") {
+            val username = "alice"
+
+            every { userDataSourceGateway.findUser(username) } returns
+                Result.success(
+                    LoginDataSourceResponseModel(
+                        username = "alice",
+                        password = "hashedpwd",
+                        createdAt = LocalDateTime.now(),
+                    ),
+                )
+
+            val result = useCase.getUser(username)
+
+            result.isSuccess shouldBe true
+            val value = result.getOrNull()
+            value shouldNotBe null
+            value!!.username shouldBe "alice"
+            value.createdAt shouldNotBe null
+
+            verify { userDataSourceGateway.findUser(username) }
         }
     })

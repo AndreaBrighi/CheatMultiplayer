@@ -16,7 +16,7 @@ data class UserEntity(
     @Column(name = "user_id")
     var id: Long = 0L,
     @Column(nullable = false)
-    val name: String = "",
+    val username: String = "",
     @Column(nullable = false)
     val password: String = "",
     @Column(name = "created_at", nullable = true)

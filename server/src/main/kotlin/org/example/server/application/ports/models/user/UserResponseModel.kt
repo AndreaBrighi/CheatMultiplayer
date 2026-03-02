@@ -1,7 +1,7 @@
 package org.example.server.application.ports.models.user
 
 data class UserResponseModel(
-    val name: String,
+    val username: String,
     val token: String,
     val time: String,
 )

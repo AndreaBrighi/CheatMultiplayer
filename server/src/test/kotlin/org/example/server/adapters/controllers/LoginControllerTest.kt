@@ -5,9 +5,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.example.server.application.ports.UserInputBoundary
 import org.example.server.application.ports.models.login.LoginRequestModel
 import org.example.server.application.ports.models.login.LoginResponseModel
-import org.example.server.application.ports.UserInputBoundary
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
@@ -24,7 +24,7 @@ class LoginControllerTest :
         val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(controller).build()
 
         test("login success returns response dto") {
-            val responseModel = LoginResponseModel(name = "Alice", token = "token123")
+            val responseModel = LoginResponseModel(username = "Alice", token = "token123")
             every { userInputBoundary.login(any<LoginRequestModel>()) } returns Result.success(responseModel)
 
             val request = mapOf("username" to "user1", "password" to "pass")
