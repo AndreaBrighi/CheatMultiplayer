@@ -25,7 +25,10 @@ class LoginControllerTest :
 
         test("login success returns response dto") {
             val responseModel = LoginResponseModel(username = "Alice", token = "token123")
-            every { userInputBoundary.login(any<LoginRequestModel>()) } returns Result.success(responseModel)
+            every { userInputBoundary.login(any<LoginRequestModel>(), any()) } answers {
+                val presenter = secondArg<org.example.server.application.ports.LoginOutputBoundary>()
+                presenter.presentSuccess(responseModel)
+            }
 
             val request = mapOf("username" to "user1", "password" to "pass")
             val json = objectMapper.writeValueAsString(request)
@@ -37,14 +40,17 @@ class LoginControllerTest :
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json),
                 ).andExpect(MockMvcResultMatchers.status().isOk)
-                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value("Alice"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.token").value("token123"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("Alice"))
 
-            verify { userInputBoundary.login(any()) }
+            verify { userInputBoundary.login(any(), any()) }
         }
 
         test("login failure returns unauthorized and message") {
-            every { userInputBoundary.login(any<LoginRequestModel>()) } returns Result.failure(Exception("bad creds"))
+            every { userInputBoundary.login(any<LoginRequestModel>(), any()) } answers {
+                val presenter = secondArg<org.example.server.application.ports.LoginOutputBoundary>()
+                presenter.presentInvalidCredentials("bad creds")
+            }
 
             val request = mapOf("username" to "user1", "password" to "wrong")
             val json = objectMapper.writeValueAsString(request)
@@ -56,8 +62,8 @@ class LoginControllerTest :
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json),
                 ).andExpect(MockMvcResultMatchers.status().isUnauthorized)
-                .andExpect(MockMvcResultMatchers.content().string("bad creds"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("bad creds"))
 
-            verify { userInputBoundary.login(any()) }
+            verify { userInputBoundary.login(any(), any()) }
         }
     })

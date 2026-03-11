@@ -1,6 +1,7 @@
 package org.example.server.architecture
 
 import com.tngtech.archunit.core.importer.ClassFileImporter
+import com.tngtech.archunit.core.importer.ImportOption
 import com.tngtech.archunit.library.Architectures.layeredArchitecture
 import kotlin.test.Test
 
@@ -8,7 +9,9 @@ class CleanArchitectureTest {
     @Test
     fun cleanArchitectureUncleBobStyle() {
         val importedClasses =
-            ClassFileImporter().importPackages("org.example.server")
+            ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages("org.example.server")
 
         layeredArchitecture()
             .consideringOnlyDependenciesInLayers()

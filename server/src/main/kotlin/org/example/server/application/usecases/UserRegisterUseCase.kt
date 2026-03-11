@@ -1,13 +1,13 @@
 package org.example.server.application.usecases
 
+import org.example.server.application.ports.CreateUserOutputBoundary
+import org.example.server.application.ports.GetUserOutputBoundary
+import org.example.server.application.ports.LoginOutputBoundary
 import org.example.server.application.ports.PasswordSecurity
 import org.example.server.application.ports.TokenSecurity
 import org.example.server.application.ports.UserInputBoundary
 import org.example.server.application.ports.UserRegisterDataSourceGateway
 import org.example.server.application.ports.models.UserInfoResponse
-import org.example.server.application.ports.models.exception.PasswordToShortException
-import org.example.server.application.ports.models.exception.UserAlreadyPresentException
-import org.example.server.application.ports.models.exception.UserNotFound
 import org.example.server.application.ports.models.login.LoginRequestModel
 import org.example.server.application.ports.models.login.LoginResponseModel
 import org.example.server.application.ports.models.user.UserDataSourceRequestModel
@@ -21,13 +21,18 @@ class UserRegisterUseCase(
     private val passwordSecurity: PasswordSecurity,
     private val tokenSecurity: TokenSecurity,
 ) : UserInputBoundary {
-    override fun createUser(requestModel: UserRequestModel): Result<UserResponseModel> {
+    override fun createUser(
+        requestModel: UserRequestModel,
+        presenter: CreateUserOutputBoundary,
+    ) {
         val now = LocalDateTime.now()
         if (userDataSourceGateway.existsByUsername(requestModel.username)) {
-            return Result.failure(UserAlreadyPresentException())
+            presenter.presentUserAlreadyExists("User already exists")
+            return
         }
         if (requestModel.password.length < 8) {
-            return Result.failure(PasswordToShortException())
+            presenter.presentPasswordError("Password too short")
+            return
         }
 
         val hashedPassword = passwordSecurity.hash(requestModel.password)
@@ -40,34 +45,51 @@ class UserRegisterUseCase(
             )
         val saveResult = userDataSourceGateway.save(userDataSourceModel)
         if (saveResult.isFailure) {
-            return Result.failure(saveResult.exceptionOrNull() ?: Exception("Unknown error"))
+            presenter.presentSaveError(saveResult.exceptionOrNull()?.message ?: "Unknown error")
+            return
         }
         val token = tokenSecurity.generateToken(user.username)
         val accountResponseModel = UserResponseModel(user.username, token, now.toString())
-        return Result.success(accountResponseModel)
+        presenter.presentSuccess(accountResponseModel)
     }
 
-    override fun login(requestModel: LoginRequestModel): Result<LoginResponseModel> {
+    override fun login(
+        requestModel: LoginRequestModel,
+        presenter: LoginOutputBoundary,
+    ) {
         val findUserResult = userDataSourceGateway.findUser(requestModel.username)
         if (findUserResult.isFailure) {
-            return Result.failure(UserNotFound())
+            presenter.presentUserNotFound("User not found")
+            return
         }
-        val user = findUserResult.getOrNull() ?: return Result.failure(UserNotFound())
+        val user =
+            findUserResult.getOrNull() ?: run {
+                presenter.presentUserNotFound("User not found")
+                return
+            }
         if (!passwordSecurity.matches(requestModel.password, user.password)) {
-            return Result.failure(Exception("Invalid password"))
+            presenter.presentInvalidCredentials("Invalid password")
+            return
         }
         val token = tokenSecurity.generateToken(requestModel.username)
-        val loginResponseModel = LoginResponseModel(requestModel.username, token)
-        return Result.success(loginResponseModel)
+        presenter.presentSuccess(LoginResponseModel(requestModel.username, token))
     }
 
-    override fun getUser(username: String): Result<UserInfoResponse> {
+    override fun getUser(
+        username: String,
+        presenter: GetUserOutputBoundary,
+    ) {
         val findUserResult = userDataSourceGateway.findUser(username)
         if (findUserResult.isFailure) {
-            return Result.failure(UserNotFound())
+            presenter.presentUserNotFound("User not found")
+            return
         }
-        val user = findUserResult.getOrNull() ?: return Result.failure(UserNotFound())
+        val user =
+            findUserResult.getOrNull() ?: run {
+                presenter.presentUserNotFound("User not found")
+                return
+            }
         val tokenResponseModel = UserInfoResponse(user.username, user.createdAt)
-        return Result.success(tokenResponseModel)
+        presenter.presentSuccess(tokenResponseModel)
     }
 }

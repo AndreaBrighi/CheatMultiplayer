@@ -1,19 +1,16 @@
 package org.example.server.application
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.example.server.application.ports.CreateUserOutputBoundary
+import org.example.server.application.ports.GetUserOutputBoundary
+import org.example.server.application.ports.LoginOutputBoundary
 import org.example.server.application.ports.PasswordSecurity
 import org.example.server.application.ports.TokenSecurity
 import org.example.server.application.ports.UserRegisterDataSourceGateway
-import org.example.server.application.ports.models.exception.PasswordToShortException
-import org.example.server.application.ports.models.exception.UserAlreadyPresentException
-import org.example.server.application.ports.models.exception.UserNotFound
 import org.example.server.application.ports.models.login.LoginDataSourceResponseModel
 import org.example.server.application.ports.models.login.LoginRequestModel
 import org.example.server.application.ports.models.user.UserDataSourceRequestModel
@@ -41,13 +38,9 @@ class UserRegisterUseCaseTest :
             every { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) } returns Result.success(1L)
             every { tokenSecurity.generateToken(request.username) } returns "tok123"
 
-            val result = useCase.createUser(request)
+            val presenter = mockk<CreateUserOutputBoundary>(relaxed = true)
 
-            result.isSuccess shouldBe true
-            val value = result.getOrNull()
-            value shouldNotBe null
-            value!!.username shouldBe "bob"
-            value.token shouldBe "tok123"
+            useCase.createUser(request, presenter)
 
             verify { userDataSourceGateway.existsByUsername("bob") }
             verify { passwordSecurity.hash("strongpass") }
@@ -60,6 +53,9 @@ class UserRegisterUseCaseTest :
                 )
             }
             verify { tokenSecurity.generateToken("bob") }
+
+            // verify presenter called with expected response
+            verify { presenter.presentSuccess(match { it.username == "bob" && it.token == "tok123" }) }
         }
 
         test("createUser duplicate returns UserAlreadyPresentException") {
@@ -67,14 +63,14 @@ class UserRegisterUseCaseTest :
 
             every { userDataSourceGateway.existsByUsername(request.username) } returns true
 
-            val result = useCase.createUser(request)
+            val presenter = mockk<CreateUserOutputBoundary>(relaxed = true)
+            useCase.createUser(request, presenter)
 
-            result.isFailure shouldBe true
-            val ex = result.exceptionOrNull()
-            ex shouldNotBe null
-            ex.shouldBeInstanceOf<UserAlreadyPresentException>()
-
+            verify { userDataSourceGateway.existsByUsername(request.username) }
             verify(exactly = 0) { userDataSourceGateway.save(any()) }
+
+            // verify presenter received the correct error call
+            verify { presenter.presentUserAlreadyExists("User already exists") }
         }
 
         test("createUser short password returns PasswordToShortException") {
@@ -82,14 +78,13 @@ class UserRegisterUseCaseTest :
 
             every { userDataSourceGateway.existsByUsername(request.username) } returns false
 
-            val result = useCase.createUser(request)
+            val presenter = mockk<CreateUserOutputBoundary>(relaxed = true)
+            useCase.createUser(request, presenter)
 
-            result.isFailure shouldBe true
-            val ex = result.exceptionOrNull()
-            ex shouldNotBe null
-            ex.shouldBeInstanceOf<PasswordToShortException>()
-
+            verify { userDataSourceGateway.existsByUsername(request.username) }
             verify(exactly = 0) { userDataSourceGateway.save(any()) }
+
+            verify { presenter.presentPasswordError("Password too short") }
         }
 
         test("createUser save failure returns underlying exception") {
@@ -99,12 +94,14 @@ class UserRegisterUseCaseTest :
             every { passwordSecurity.hash(request.password) } returns "hashed"
             every { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) } returns Result.failure(Exception("db error"))
 
-            val result = useCase.createUser(request)
+            val presenter = mockk<CreateUserOutputBoundary>(relaxed = true)
+            useCase.createUser(request, presenter)
 
-            result.isFailure shouldBe true
-            val ex = result.exceptionOrNull()
-            ex shouldNotBe null
-            ex!!.message shouldBe "db error"
+            verify { userDataSourceGateway.existsByUsername(request.username) }
+            verify { passwordSecurity.hash(request.password) }
+            verify { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) }
+
+            verify { presenter.presentSaveError("db error") }
         }
 
         test("login success returns token") {
@@ -121,17 +118,14 @@ class UserRegisterUseCaseTest :
             every { passwordSecurity.matches(request.password, "hashedpwd") } returns true
             every { tokenSecurity.generateToken(request.username) } returns "tok-abc"
 
-            val result = useCase.login(request)
-
-            result.isSuccess shouldBe true
-            val value = result.getOrNull()
-            value shouldNotBe null
-            value!!.username shouldBe "alice"
-            value.token shouldBe "tok-abc"
+            val presenter = mockk<LoginOutputBoundary>(relaxed = true)
+            useCase.login(request, presenter)
 
             verify { userDataSourceGateway.findUser(request.username) }
             verify { passwordSecurity.matches(request.password, "hashedpwd") }
             verify { tokenSecurity.generateToken(request.username) }
+
+            verify { presenter.presentSuccess(match { it.token == "tok-abc" }) }
         }
 
         test("login user not found returns UserNotFound") {
@@ -139,15 +133,13 @@ class UserRegisterUseCaseTest :
 
             every { userDataSourceGateway.findUser(request.username) } returns Result.failure(Exception("not found"))
 
-            val result = useCase.login(request)
-
-            result.isFailure shouldBe true
-            val ex = result.exceptionOrNull()
-            ex shouldNotBe null
-            ex.shouldBeInstanceOf<UserNotFound>()
+            val presenter = mockk<LoginOutputBoundary>(relaxed = true)
+            useCase.login(request, presenter)
 
             verify(exactly = 0) { passwordSecurity.matches(any(), any()) }
             verify(exactly = 0) { tokenSecurity.generateToken(any()) }
+
+            verify { presenter.presentUserNotFound("User not found") }
         }
 
         test("login wrong password returns Invalid password exception") {
@@ -159,16 +151,14 @@ class UserRegisterUseCaseTest :
                 )
             every { passwordSecurity.matches(request.password, "hashedpwd") } returns false
 
-            val result = useCase.login(request)
-
-            result.isFailure shouldBe true
-            val ex = result.exceptionOrNull()
-            ex shouldNotBe null
-            ex!!.message shouldBe "Invalid password"
+            val presenter = mockk<LoginOutputBoundary>(relaxed = true)
+            useCase.login(request, presenter)
 
             verify { userDataSourceGateway.findUser(request.username) }
             verify { passwordSecurity.matches(request.password, "hashedpwd") }
             verify(exactly = 0) { tokenSecurity.generateToken(any()) }
+
+            verify { presenter.presentInvalidCredentials("Invalid password") }
         }
 
         test("get user by username success returns UserResponseModel") {
@@ -183,14 +173,11 @@ class UserRegisterUseCaseTest :
                     ),
                 )
 
-            val result = useCase.getUser(username)
-
-            result.isSuccess shouldBe true
-            val value = result.getOrNull()
-            value shouldNotBe null
-            value!!.username shouldBe "alice"
-            value.createdAt shouldNotBe null
+            val presenter = mockk<GetUserOutputBoundary>(relaxed = true)
+            useCase.getUser(username, presenter)
 
             verify { userDataSourceGateway.findUser(username) }
+
+            verify { presenter.presentSuccess(match { it.username == "alice" }) }
         }
     })

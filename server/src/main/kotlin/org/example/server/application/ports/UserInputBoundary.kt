@@ -1,18 +1,23 @@
 package org.example.server.application.ports
 
-import org.example.server.application.ports.models.UserInfoResponse
 import org.example.server.application.ports.models.login.LoginRequestModel
-import org.example.server.application.ports.models.login.LoginResponseModel
 import org.example.server.application.ports.models.user.UserRequestModel
-import org.example.server.application.ports.models.user.UserResponseModel
-
 
 interface UserInputBoundary {
-    fun createUser(requestModel: UserRequestModel): Result<UserResponseModel>
+    fun createUser(
+        requestModel: UserRequestModel,
+        presenter: CreateUserOutputBoundary,
+    )
 
-    fun login(requestModel: LoginRequestModel): Result<LoginResponseModel>
+    fun login(
+        requestModel: LoginRequestModel,
+        presenter: LoginOutputBoundary,
+    )
 
-    fun getUser(username: String): Result<UserInfoResponse>
+    fun getUser(
+        username: String,
+        presenter: GetUserOutputBoundary,
+    )
 
     /*
     fun changePassword(requestModel: UserRequestModel): Result<UserResponseModel>

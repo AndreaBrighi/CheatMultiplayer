@@ -48,7 +48,10 @@ class LoginControllerTestWithToken :
                 )
 
             val expected = UserInfoResponse(username = username, createdAt = now)
-            every { userInputBoundary.getUser(username) } returns Result.success(expected)
+            every { userInputBoundary.getUser(username, any()) } answers {
+                val presenter = secondArg<org.example.server.application.ports.GetUserOutputBoundary>()
+                presenter.presentSuccess(expected)
+            }
 
             mockMvc
                 .perform(
