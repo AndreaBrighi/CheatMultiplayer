@@ -3,6 +3,7 @@ package org.example.server.adapters.controllers
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
+import org.example.server.application.ports.GetUserOutputBoundary
 import org.example.server.application.ports.TokenSecurity
 import org.example.server.application.ports.UserAuthenticationGateway
 import org.example.server.application.ports.UserInputBoundary
@@ -49,7 +50,7 @@ class LoginControllerTestWithToken :
 
             val expected = UserInfoResponse(username = username, createdAt = now)
             every { userInputBoundary.getUser(username, any()) } answers {
-                val presenter = secondArg<org.example.server.application.ports.GetUserOutputBoundary>()
+                val presenter = secondArg<GetUserOutputBoundary>()
                 presenter.presentSuccess(expected)
             }
 

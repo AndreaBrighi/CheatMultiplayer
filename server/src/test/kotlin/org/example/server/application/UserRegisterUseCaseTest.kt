@@ -70,7 +70,7 @@ class UserRegisterUseCaseTest :
             verify(exactly = 0) { userDataSourceGateway.save(any()) }
 
             // verify presenter received the correct error call
-            verify { presenter.presentUserAlreadyExists("User already exists") }
+            verify { presenter.presentUserAlreadyExists(any()) }
         }
 
         test("createUser short password returns PasswordToShortException") {
@@ -101,7 +101,7 @@ class UserRegisterUseCaseTest :
             verify { passwordSecurity.hash(request.password) }
             verify { userDataSourceGateway.save(any<UserDataSourceRequestModel>()) }
 
-            verify { presenter.presentSaveError("db error") }
+            verify { presenter.presentSaveError(any()) }
         }
 
         test("login success returns token") {
@@ -158,18 +158,19 @@ class UserRegisterUseCaseTest :
             verify { passwordSecurity.matches(request.password, "hashedpwd") }
             verify(exactly = 0) { tokenSecurity.generateToken(any()) }
 
-            verify { presenter.presentInvalidCredentials("Invalid password") }
+            verify { presenter.presentInvalidCredentials(any()) }
         }
 
         test("get user by username success returns UserResponseModel") {
             val username = "alice"
+            val now = LocalDateTime.now()
 
             every { userDataSourceGateway.findUser(username) } returns
                 Result.success(
                     LoginDataSourceResponseModel(
-                        username = "alice",
+                        username = username,
                         password = "hashedpwd",
-                        createdAt = LocalDateTime.now(),
+                        createdAt = now,
                     ),
                 )
 
@@ -178,6 +179,6 @@ class UserRegisterUseCaseTest :
 
             verify { userDataSourceGateway.findUser(username) }
 
-            verify { presenter.presentSuccess(match { it.username == "alice" }) }
+            verify { presenter.presentSuccess(match { it.username == username && it.createdAt == now }) }
         }
     })

@@ -20,7 +20,5 @@ class GetUserHttpPresenter : GetUserOutputBoundary {
         responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body(body)
     }
 
-    fun toResponseEntity(): ResponseEntity<Any> {
-        return responseEntity ?: ResponseEntity("", HttpStatus.INTERNAL_SERVER_ERROR)
-    }
+    fun toResponseEntity(): ResponseEntity<Any> = responseEntity ?: ResponseEntity("", HttpStatus.INTERNAL_SERVER_ERROR)
 }

@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.example.server.application.ports.LoginOutputBoundary
 import org.example.server.application.ports.UserInputBoundary
 import org.example.server.application.ports.models.login.LoginRequestModel
 import org.example.server.application.ports.models.login.LoginResponseModel
@@ -26,7 +27,7 @@ class LoginControllerTest :
         test("login success returns response dto") {
             val responseModel = LoginResponseModel(username = "Alice", token = "token123")
             every { userInputBoundary.login(any<LoginRequestModel>(), any()) } answers {
-                val presenter = secondArg<org.example.server.application.ports.LoginOutputBoundary>()
+                val presenter = secondArg<LoginOutputBoundary>()
                 presenter.presentSuccess(responseModel)
             }
 
@@ -48,7 +49,7 @@ class LoginControllerTest :
 
         test("login failure returns unauthorized and message") {
             every { userInputBoundary.login(any<LoginRequestModel>(), any()) } answers {
-                val presenter = secondArg<org.example.server.application.ports.LoginOutputBoundary>()
+                val presenter = secondArg<LoginOutputBoundary>()
                 presenter.presentInvalidCredentials("bad creds")
             }
 

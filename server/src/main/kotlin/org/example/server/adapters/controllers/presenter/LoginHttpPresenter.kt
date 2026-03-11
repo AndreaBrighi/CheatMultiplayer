@@ -25,7 +25,5 @@ class LoginHttpPresenter : LoginOutputBoundary {
         responseEntity = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body)
     }
 
-    fun toResponseEntity(): ResponseEntity<Any> {
-        return responseEntity ?: ResponseEntity("", HttpStatus.INTERNAL_SERVER_ERROR)
-    }
+    fun toResponseEntity(): ResponseEntity<Any> = responseEntity ?: ResponseEntity("", HttpStatus.INTERNAL_SERVER_ERROR)
 }
