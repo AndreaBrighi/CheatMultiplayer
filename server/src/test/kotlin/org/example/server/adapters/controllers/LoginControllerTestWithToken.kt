@@ -1,6 +1,7 @@
 package org.example.server.adapters.controllers
 
 import io.kotest.core.spec.style.FunSpec
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import org.example.server.application.ports.GetUserOutputBoundary
@@ -61,5 +62,7 @@ class LoginControllerTestWithToken :
                         .header("Authorization", "Bearer $token"),
                 ).andExpect(MockMvcResultMatchers.status().isOk)
                 .andExpect(MockMvcResultMatchers.jsonPath("$.username").value(username))
+
+            confirmVerified(userInputBoundary)
         }
     })
