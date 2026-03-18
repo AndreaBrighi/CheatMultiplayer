@@ -33,6 +33,7 @@ class SecurityConfig {
             }
 
             authorizeHttpRequests {
+                authorize("api/register", permitAll)
                 authorize("/api/login", permitAll)
                 authorize("/api/public/**", permitAll)
                 authorize("/api/private/**", authenticated)

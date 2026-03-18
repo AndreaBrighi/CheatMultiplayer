@@ -1,7 +1,9 @@
 package org.example.server.adapters.controllers
 
+import org.example.server.adapters.controllers.dto.CreateUserRequestDto
 import org.example.server.adapters.controllers.dto.LoginRequestDto
 import org.example.server.adapters.controllers.dto.toModel
+import org.example.server.adapters.controllers.presenter.CreateUserHttpPresenter
 import org.example.server.adapters.controllers.presenter.GetUserHttpPresenter
 import org.example.server.adapters.controllers.presenter.LoginHttpPresenter
 import org.example.server.application.ports.UserInputBoundary
@@ -19,6 +21,15 @@ import org.springframework.web.bind.annotation.RestController
 class LoginController(
     val userInputBoundary: UserInputBoundary,
 ) {
+    @PostMapping("/register")
+    fun register(
+        @RequestBody createUserRequest: CreateUserRequestDto,
+    ): HttpEntity<Any> {
+        val presenter = CreateUserHttpPresenter()
+        userInputBoundary.createUser(createUserRequest.toModel(), presenter)
+        return presenter.toResponseEntity()
+    }
+
     @PostMapping("/login")
     fun login(
         @RequestBody loginRequest: LoginRequestDto,
