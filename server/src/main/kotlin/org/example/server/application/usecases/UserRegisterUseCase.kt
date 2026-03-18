@@ -59,16 +59,16 @@ class UserRegisterUseCase(
     ) {
         val findUserResult = userDataSourceGateway.findUser(requestModel.username)
         if (findUserResult.isFailure) {
-            presenter.presentUserNotFound("User not found")
+            presenter.presentUserNotFound("Credential error")
             return
         }
         val user =
             findUserResult.getOrNull() ?: run {
-                presenter.presentUserNotFound("User not found")
+                presenter.presentUserNotFound("Credential error")
                 return
             }
         if (!passwordSecurity.matches(requestModel.password, user.password)) {
-            presenter.presentInvalidCredentials("Invalid password")
+            presenter.presentInvalidCredentials("Credential error")
             return
         }
         val token = tokenSecurity.generateToken(requestModel.username)
